@@ -51,7 +51,7 @@ int main(int argc, char ** argv){
 		strcpy(mode, argv[1]); //On récupère le mode d'utilisation entrée dans mode pour utiliser plus tard.
 				
 		pid_t pid; char fichier[MAX_SIZE_BUF];
-		strcpy(fichier, "fichier2.txt");
+		strcpy(fichier, "fichier1.txt");
 		for(i = 0; i<nombreFichiers; i++){
 			pid = fork();
 			//TODO: Il faudrait choisir ici quels fichiers sera passer au processus fils(ou processus chefs d'équipes.
@@ -115,11 +115,11 @@ void chefEquipeMain(char * nomFichier){
 					k = 0; nombreValeurs++;
 				}
 			}//On extraie une partie des valeurs du ficher nomFichier dans le tableau valeurs. valeurs[0] est le nombre de valeurs dans le fichier.
-		}while(nombreValeurs<(int)valeurs[0]);
+		}while(nombreValeurs<valeurs[0]);
 		
 		fprintf(stdout, "nombreValeurs : %d\n", nombreValeurs);
-		for(i = 0; i<nombreValeurs; i++){
-			fprintf(stdout, "%d : %f\n", i, valeurs[i]);
+		for(i = 1; i<nombreValeurs; i++){
+			fprintf(stdout, "%d : %f\n", i-1, valeurs[i]);
 		}
 		
 	}
