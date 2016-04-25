@@ -17,10 +17,11 @@ struct byThread{
 	int deb;
 	int fin;
 	char * mode;
-	pthread_mutex_t * mutex;
+	//~ pthread_mutex_t * mutex;
 };
 
-struct byThread * creationByThread(float * chiffre, int deb, int fin, char * mode, pthread_mutex_t * mutex){
+//~ struct byThread * creationByThread(float * chiffre, int deb, int fin, char * mode, pthread_mutex_t * mutex){
+struct byThread * creationByThread(float * chiffre, int deb, int fin, int taille, char * mode){
 	//Initialise la structure de données byThread qui sert au processus chefs d'équipes à passer les données que doivent traiter les threads aux différents threads qu'il engendre.
 	assert(deb>=0);
 	assert(fin>=0);
@@ -28,12 +29,13 @@ struct byThread * creationByThread(float * chiffre, int deb, int fin, char * mod
 	thInfo->deb = deb;
 	thInfo->fin = fin;
 	thInfo->chiffre = chiffre;
-	thInfo->mutex = mutex;
 	thInfo->mode = mode;
+	thInfo->taille = taille; //taille de chiffre[]
 	return thInfo;
 }
 
-void chefEquipeMain(char * nomFichier);
+void chefEquipeMain(char * nomFichier, char* mode);
+void* mainThread(void* a);
 
 int main(int argc, char ** argv){
 	if(argc>=3){
@@ -61,7 +63,7 @@ int main(int argc, char ** argv){
 			}
 			else{
 				//fils
-				chefEquipeMain(fichier);
+				chefEquipeMain(fichier, mode);
 				exit(0);
 			}
 		}
@@ -94,7 +96,7 @@ int main(int argc, char ** argv){
 }
 
 //Il faudrait créer des fonctions "main" pour les threads et les processus chefs d'équipe
-void chefEquipeMain(char * nomFichier){
+void chefEquipeMain(char * nomFichier, char* mode){
 	char buf[MAX_SIZE_BUF]; char entreeTraiter[MAX_SIZE_BUF]; int i;
 	float valeurs[100000]; int nombreValeurs = 0; int j, k;
 	int FS = open(nomFichier, O_RDONLY);
@@ -117,10 +119,34 @@ void chefEquipeMain(char * nomFichier){
 			}//On extraie une partie des valeurs du ficher nomFichier dans le tableau valeurs. valeurs[0] est le nombre de valeurs dans le fichier.
 		}while(nombreValeurs<valeurs[0]);
 		
+		
 		fprintf(stdout, "nombreValeurs : %d\n", nombreValeurs);
 		for(i = 1; i<nombreValeurs; i++){
 			fprintf(stdout, "%d : %f\n", i-1, valeurs[i]);
 		}
 		
+		
+		struct byThread * thInfo = creationByThread(valeurs, 0, nombreValeurs, nombreValeurs, mode);
+		int nombreThreadTotal = nombreValeurs / 100; int nombreThreadCreer = 0;
+		pthread_t tid; 
+		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
+			pthread_create( &tid, NULL, &mainThread, &(thInfo));
+			pthread_join(tid, NULL);
+		}
+		
+		
 	}
+}
+
+void* mainThread(void* a){
+	struct byThread* id = a; int i;
+	assert(id->taille>0);//C'est assert se déclenche de temps en temps sans que je sache d'ou ça puisse venir.
+	assert(id->chiffre != NULL);
+	printf("DEBUT\n");
+	for(i = id->deb; i < id->fin; i++){
+		printf("%f ", id->chiffre[i]);
+	}
+	printf("\nFIN\n");
+	pthread_exit(EXIT_SUCCESS);
+	
 }
