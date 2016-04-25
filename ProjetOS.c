@@ -153,13 +153,13 @@ void* mainThread(void* a){
 	struct byThread* id = (struct byThread*)a; int i; //Après un test d'affichage, j'ai pu remarquer que le passage en argument de thread ne marche pas sur ma structure de données.
 	assert(id->taille>0);//C'est assert se déclenche de temps en temps sans que je sache d'ou ça puisse venir.
 	assert(id->chiffre != NULL);
-	//~ printf("Affichage dans threads : \n");
-	//~ afficherByThread(*id);
-	printf("DEBUT\n");
-	for(i = id->deb; i < id->fin; i++){
-		printf("%f ", id->chiffre[i]);
-	}
-	printf("\nFIN\n");
+	printf("Affichage dans threads : \n");
+	afficherByThread(*id);
+	//~ printf("DEBUT\n");
+	//~ for(i = id->deb; i < id->fin; i++){
+		//~ printf("%f ", id->chiffre[i]);
+	//~ }
+	//~ printf("\nFIN\n");
 	pthread_exit(EXIT_SUCCESS);
 	
 }
