@@ -34,6 +34,15 @@ struct byThread * creationByThread(float * chiffre, int deb, int fin, int taille
 	return thInfo;
 }
 
+void afficherByThread(struct byThread thInfo){
+	int i;
+	for(i = 0; i<thInfo.taille; i++){
+		printf("%f ", thInfo.chiffre[i]);
+	}
+	printf("\n");
+	printf("deb : %d, fin : %d, mode : %s, taille de chiffre : %d\n", thInfo.deb, thInfo.fin, thInfo.mode, thInfo.taille);
+}
+
 void chefEquipeMain(char * nomFichier, char* mode);
 void* mainThread(void* a);
 
@@ -127,6 +136,8 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		
 		
 		struct byThread * thInfo = creationByThread(valeurs, 0, nombreValeurs, nombreValeurs, mode);
+		printf("Affichage avant les threads :\n");
+		afficherByThread(*thInfo);
 		int nombreThreadTotal = nombreValeurs / 100; int nombreThreadCreer = 0;
 		pthread_t tid; 
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
@@ -139,9 +150,11 @@ void chefEquipeMain(char * nomFichier, char* mode){
 }
 
 void* mainThread(void* a){
-	struct byThread* id = a; int i;
+	struct byThread* id = (struct byThread*)a; int i; //Après un test d'affichage, j'ai pu remarquer que le passage en argument de thread ne marche pas sur ma structure de données.
 	assert(id->taille>0);//C'est assert se déclenche de temps en temps sans que je sache d'ou ça puisse venir.
 	assert(id->chiffre != NULL);
+	//~ printf("Affichage dans threads : \n");
+	//~ afficherByThread(*id);
 	printf("DEBUT\n");
 	for(i = id->deb; i < id->fin; i++){
 		printf("%f ", id->chiffre[i]);
