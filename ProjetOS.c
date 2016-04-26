@@ -43,7 +43,7 @@ void afficherByThread(BYTHREAD thInfo){
 	printf("deb : %d, fin : %d, mode : %s, taille de chiffre : %d\n", thInfo.deb, thInfo.fin, thInfo.mode, thInfo.taille);
 }
 
-void chefEquipeMain(char * nomFichier, char* mode);
+float chefEquipeMain(char * nomFichier, char* mode);
 void* mainThread(void* a);
 
 float max(float in[], int tailleTab);
@@ -68,23 +68,29 @@ int main(int argc, char ** argv){
 		}
 		strcpy(mode, argv[1]); //On récupère le mode d'utilisation entrée dans mode pour utiliser plus tard.
 				
-		pid_t pid; char fichier[MAX_SIZE_BUF];
-		strcpy(fichier, "fichier2.txt");
-		int status = 0;
+		pid_t pid; char fichier[MAX_SIZE_BUF]; int fd[2];
+		char buffer[MAX_SIZE_BUF];
+		strcpy(fichier, "fichier1.txt");
+		pipe(fd);
 		for(i = 0; i<nombreFichiers; i++){
 			pid = fork();
 			//TODO: Il faudrait choisir ici quels fichiers sera passer au processus fils(ou processus chefs d'équipes.
 			if(pid){
 				//pere
-				wait(&status);
-				if(WIFEXITED(status)){
-					printf("%s : %f\n", mode, WEXITSTATUS(status));
-				}	
+				close(fd[1]);
+				wait(NULL);
+				read(fd[0], buffer, MAX_SIZE_BUF);
+				printf("%f\n", atof(buffer));
+				close(fd[0]);
 			}
 			else{
 				//fils
-				chefEquipeMain(fichier, mode);
-				exit(0);
+				close(fd[0]);
+				char str[MAX_SIZE_BUF];
+				sprintf(str, "%f", chefEquipeMain(fichier, mode));
+				write(fd[1], str, MAX_SIZE_BUF);
+				close(fd[1]);
+				exit(EXIT_SUCCESS);
 			}
 		}
 		
@@ -92,14 +98,6 @@ int main(int argc, char ** argv){
 		//Le père doit procréer autant qu'il y a de fichiers d'entrées.		
 		//FILS
 		//doit assigner les valeurs de sont fichiers aux différents threads et les créer.
-		
-		//~ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-		//~ float chiffre[N];
-		//~ chiffre[0] = 0.0;
-		//~ for(i = 1; i<N; i++){
-			//~ chiffre[i] = chiffre[i-1]+1.7;
-		//~ }
-		//~ BYTHREAD * thInfo = creationByThread(chiffre, 2, 3, mode, &mutex); //Façon d'initialiser un struct byThread. C'est la structure qu'il faudra envoyer aux threads. Elles seront initialisé par les processus chefs d'équipe.
 		
 		//Affichage des noms de fichier en entrée (affichage test).
 		fprintf(stdout, "Fichiers d'entrées : ");
@@ -117,7 +115,7 @@ int main(int argc, char ** argv){
 }
 
 //Il faudrait créer des fonctions "main" pour les threads et les processus chefs d'équipe
-void chefEquipeMain(char * nomFichier, char* mode){
+float chefEquipeMain(char * nomFichier, char* mode){
 	char buf[MAX_SIZE_BUF]; char entreeTraiter[MAX_SIZE_BUF]; int i;
 	float valeurs[100000]; int nombreValeurs = 0; int k;
 	int FS = open(nomFichier, O_RDONLY);
@@ -189,8 +187,9 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		for(i =0; i<nombreThreadTotal; i++){
 			free(thInfo[i]);
 		}
-		exit(miseEnCommunRes);
+		return miseEnCommunRes;
 	}
+	return -1;
 }
 
 void* mainThread(void* a){
