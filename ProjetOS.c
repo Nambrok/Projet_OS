@@ -47,6 +47,10 @@ void chefEquipeMain(char * nomFichier, char* mode);
 void* mainThread(void* a);
 
 float max(float in[], int tailleTab);
+float min(float in[], int tailleTab);
+float avg(float in[], int tailleTab);
+float sum(float in[], int tailleTab);
+float odd(float in[], int tailleTab);
 
 int main(int argc, char ** argv){
 	if(argc>=3){
@@ -137,7 +141,7 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		}
 		
 		
-		BYTHREAD *thInfo = creationByThread(valeurs, 0, 10, 10, mode);
+		BYTHREAD *thInfo = creationByThread(valeurs, 0, 100, 100, mode);
 		printf("Affichage avant les threads :\n");
 		//~ afficherByThread(*thInfo);
 		int nombreThreadTotal = nombreValeurs / 100; int nombreThreadCreer = 0;
@@ -145,12 +149,11 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		pthread_t tid; 
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
 			pthread_create( &tid, NULL, &mainThread, thInfo);
-			printf("Threads %d créer\n", nombreThreadCreer);
+		}
+		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
 			pthread_join(tid, (void*)&res);
 			printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
 		}
-		
-		
 	}
 }
 
@@ -162,10 +165,28 @@ void* mainThread(void* a){
 		out[j] = id->chiffre[i];
 		j++;
 	}
-	printf("id->taille : %d, j : %d\n", id->taille, j);
+	//~ printf("id->taille : %d, j : %d\n", id->taille, j);
 	assert(id->taille == j);
 	float * res = malloc(sizeof(float));
-	*res = max(out, id->taille);
+	if(id->mode == "max"){
+			*res = max(out, id->taille);
+	}
+	else if(id->mode == "min"){
+			*res = min(out, id->taille);
+	}
+	else if(id->mode == "avg"){
+		*res = avg(out, id->taille);
+	}
+	else if(id->mode == "sum"){
+		*res = sum(out, id->taille);
+	}
+	else if(id->mode == "odd"){
+		*res = odd(out, id->taille);
+	}
+	else{
+			fprintf(stderr, "Erreur dans le mode entrée\n");
+			exit(EXIT_FAILURE);
+	}
 	return (void*)(res);	
 }
 
@@ -177,4 +198,41 @@ float max(float in[], int tailleTab){
 		}
 	}
 	return max_actuel;
+}
+
+float min(float in[], int tailleTab){
+	float min_actuel = in[0]; int i;
+	for(i = 0; i<tailleTab; i++){
+		if(in[i] < min_actuel){
+			min_actuel = in[i];
+		}
+	}
+	return min_actuel;
+}
+
+float avg(float in[], int tailleTab){
+	float sum = 0; int i;
+	for(i = 0; i<tailleTab; i++){
+		sum += in[i];
+	}
+	return sum / tailleTab;
+}
+
+float sum(float in[], int tailleTab){
+	float sum = 0; int i;
+	for(i = 0; i<tailleTab; i++){
+		sum += in[i];
+	}
+	return sum;
+}
+
+float odd(float in[], int tailleTab){
+	float nombreValeursImpair = 0; int i;
+	for(i = 0; i<tailleTab; i++){
+		if((int)in[i]%2){
+			printf("in[%d] : %f est impair\n", i, in[i]);
+			nombreValeursImpair += 1;
+		}
+	}
+	return nombreValeursImpair;
 }
