@@ -51,6 +51,7 @@ float min(float in[], int tailleTab);
 float avg(float in[], int tailleTab);
 float sum(float in[], int tailleTab);
 float odd(float in[], int tailleTab);
+int comparerChaines(const char* chaine1, const char* chaine2);
 
 int main(int argc, char ** argv){
 	if(argc>=3){
@@ -168,19 +169,24 @@ void* mainThread(void* a){
 	//~ printf("id->taille : %d, j : %d\n", id->taille, j);
 	assert(id->taille == j);
 	float * res = malloc(sizeof(float));
-	if(id->mode == "max"){
-			*res = max(out, id->taille);
+	if(comparerChaines(id->mode, "max")){
+		fprintf(stderr, "mode max\n");
+		*res = max(out, id->taille);
 	}
-	else if(id->mode == "min"){
-			*res = min(out, id->taille);
+	else if(comparerChaines(id->mode, "min")){
+		fprintf(stderr, "mode min\n");
+		*res = min(out, id->taille);
 	}
-	else if(id->mode == "avg"){
+	else if(comparerChaines(id->mode, "avg")){
+		fprintf(stderr, "mode avg\n");
 		*res = avg(out, id->taille);
 	}
-	else if(id->mode == "sum"){
+	else if(comparerChaines(id->mode, "sum")){
+		fprintf(stderr, "mode sum\n");
 		*res = sum(out, id->taille);
 	}
-	else if(id->mode == "odd"){
+	else if(comparerChaines(id->mode, "odd")){
+		fprintf(stderr, "mode odd\n");
 		*res = odd(out, id->taille);
 	}
 	else{
@@ -230,9 +236,22 @@ float odd(float in[], int tailleTab){
 	float nombreValeursImpair = 0; int i;
 	for(i = 0; i<tailleTab; i++){
 		if((int)in[i]%2){
-			printf("in[%d] : %f est impair\n", i, in[i]);
 			nombreValeursImpair += 1;
 		}
 	}
 	return nombreValeursImpair;
+}
+
+int comparerChaines(const char* chaine1, const char* chaine2){   
+	int i;
+    if(strlen(chaine1) != strlen(chaine2)){
+        return 0;
+	}
+	
+    for(i=0;i<strlen(chaine1);i++){
+        if( chaine1[i] != chaine2[i]){
+            return 0;
+        }
+	}
+    return 1;
 }
