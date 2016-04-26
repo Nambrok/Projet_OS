@@ -60,6 +60,7 @@ int main(int argc, char ** argv){
 		char nomFichiers[MAX_SIZE_BUF][MAX_SIZE_BUF]; int i, j, nombreFichiers = 0;//nomFichiers contient les noms des fichiers d'entrée qu'il faudra faire passer aux processus chefs d'équipe.
 		//nombreFichiers est la taille max de la première dimension de nomFichiers, c'à-d le nombre de nom de fichier et le nombre de fichier qu'on a.
 		char mode[MAX_SIZE_BUF];//mode est le mode, c'à-d "max", "min", "avg" etc...
+		pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 		
 		i = 0, j= 2;
 		while(i<MAX_SIZE_BUF && j<argc){
@@ -70,18 +71,20 @@ int main(int argc, char ** argv){
 		strcpy(mode, argv[1]); //On récupère le mode d'utilisation entrée dans mode pour utiliser plus tard.
 				
 		pid_t pid; char fichier[MAX_SIZE_BUF]; int fd[2];
-		char buffer[MAX_SIZE_BUF];
-		strcpy(fichier, "fichier1.txt");
-		pipe(fd);
+		char buffer[MAX_SIZE_BUF]; float res[MAX_SIZE_BUF]; j= 0;
 		for(i = 0; i<nombreFichiers; i++){
+			strcpy(fichier, nomFichiers[i]);
+			pipe(fd);
 			pid = fork();
-			//TODO: Il faudrait choisir ici quels fichiers sera passer au processus fils(ou processus chefs d'équipes.
 			if(pid){
 				//pere
 				close(fd[1]);
-				wait(NULL);
+				waitpid(pid, NULL, 0);
+				pthread_mutex_lock(&mutex);
 				read(fd[0], buffer, MAX_SIZE_BUF);
-				printf("%f\n", atof(buffer));
+				res[j] = atof(buffer);
+				j++;
+				pthread_mutex_unlock(&mutex);
 				close(fd[0]);
 			}
 			else{
@@ -94,12 +97,29 @@ int main(int argc, char ** argv){
 				exit(EXIT_SUCCESS);
 			}
 		}
-		
-		//PERE
-		//Le père doit procréer autant qu'il y a de fichiers d'entrées.		
-		//FILS
-		//doit assigner les valeurs de sont fichiers aux différents threads et les créer.
-		
+
+		float miseEnCommunRes;
+		if(comparerChaines(mode, "max")){
+			miseEnCommunRes = max(res, j);
+		}
+		else if(comparerChaines(mode, "min")){
+			miseEnCommunRes = min(res, j);
+		}
+		else if(comparerChaines(mode, "avg")){
+			miseEnCommunRes = avg(res, j);
+		}
+		else if(comparerChaines(mode, "sum")){
+			miseEnCommunRes = sum(res, j);
+		}
+		else if(comparerChaines(mode, "odd")){
+			miseEnCommunRes = oddMiseEnCommun(res, j);
+		}
+		else{
+			fprintf(stderr, "Erreur dans le mode entrée\n");
+			exit(EXIT_FAILURE);
+		}
+		printf("Le %s dans les fichiers données en entrées est %f.\n", mode, miseEnCommunRes);
+				
 		//Affichage des noms de fichier en entrée (affichage test).
 		fprintf(stdout, "Fichiers d'entrées : ");
 		for(i = 0; i<nombreFichiers; i++){
