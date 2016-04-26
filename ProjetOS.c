@@ -69,13 +69,13 @@ int main(int argc, char ** argv){
 		strcpy(mode, argv[1]); //On récupère le mode d'utilisation entrée dans mode pour utiliser plus tard.
 				
 		pid_t pid; char fichier[MAX_SIZE_BUF];
-		strcpy(fichier, "fichier1.txt");
+		strcpy(fichier, "fichier2.txt");
 		for(i = 0; i<nombreFichiers; i++){
 			pid = fork();
 			//TODO: Il faudrait choisir ici quels fichiers sera passer au processus fils(ou processus chefs d'équipes.
 			if(pid){
 				//pere
-				wait(NULL);				
+				wait(NULL);
 			}
 			else{
 				//fils
@@ -98,6 +98,7 @@ int main(int argc, char ** argv){
 		//~ BYTHREAD * thInfo = creationByThread(chiffre, 2, 3, mode, &mutex); //Façon d'initialiser un struct byThread. C'est la structure qu'il faudra envoyer aux threads. Elles seront initialisé par les processus chefs d'équipe.
 		
 		//Affichage des noms de fichier en entrée (affichage test).
+		fprintf(stdout, "Fichiers d'entrées : ");
 		for(i = 0; i<nombreFichiers; i++){
 			fprintf(stdout, "%s ", nomFichiers[i]);
 		}
@@ -135,25 +136,30 @@ void chefEquipeMain(char * nomFichier, char* mode){
 			}//On extraie une partie des valeurs du ficher nomFichier dans le tableau valeurs. valeurs[0] est le nombre de valeurs dans le fichier.
 		}while(nombreValeurs<valeurs[0]);
 		
+		close(FS);
+		//~ fprintf(stdout, "nombreValeurs : %d\n", nombreValeurs);
+		//~ for(i = 1; i<nombreValeurs; i++){
+			//~ fprintf(stdout, "%d : %f\n", i-1, valeurs[i]);
+		//~ }
 		
-		fprintf(stdout, "nombreValeurs : %d\n", nombreValeurs);
-		for(i = 1; i<nombreValeurs; i++){
-			fprintf(stdout, "%d : %f\n", i-1, valeurs[i]);
-		}
-		
-		
-		BYTHREAD *thInfo = creationByThread(valeurs, 0, 100, 100, mode);
-		printf("Affichage avant les threads :\n");
-		//~ afficherByThread(*thInfo);
-		int nombreThreadTotal = nombreValeurs / 100; int nombreThreadCreer = 0;
+		int nombreThreadTotal = (nombreValeurs / 100)+1; int nombreThreadCreer = 0;
 		float * res;
-		pthread_t tid; 
-		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
-			pthread_create( &tid, NULL, &mainThread, thInfo);
+		pthread_t tid;
+		
+		
+		BYTHREAD * thInfo[MAX_SIZE_BUF]; int deb = 1, fin = 101; int taille = 100;//J'initialise la structure de données à envoyées pour chaque thread.
+		for(i = 0; i<nombreThreadTotal; i++){
+			thInfo[i] = creationByThread(valeurs, deb, fin, taille, mode);
+			deb+= 100; fin+= 100;
 		}
+		
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
+			pthread_create( &tid, NULL, &mainThread, thInfo[nombreThreadCreer]);
 			pthread_join(tid, (void*)&res);
 			printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
+		}
+		for(i =0; i<nombreThreadTotal; i++){
+			free(thInfo[i]);
 		}
 	}
 }
@@ -166,37 +172,34 @@ void* mainThread(void* a){
 		out[j] = id->chiffre[i];
 		j++;
 	}
-	//~ printf("id->taille : %d, j : %d\n", id->taille, j);
-	assert(id->taille == j);
+	//~ for(i = 0; i<id->taille; i++){
+		//~ printf("%f\n", out[i]);
+	//~ }
 	float * res = malloc(sizeof(float));
 	if(comparerChaines(id->mode, "max")){
-		fprintf(stderr, "mode max\n");
 		*res = max(out, id->taille);
 	}
 	else if(comparerChaines(id->mode, "min")){
-		fprintf(stderr, "mode min\n");
 		*res = min(out, id->taille);
 	}
 	else if(comparerChaines(id->mode, "avg")){
-		fprintf(stderr, "mode avg\n");
 		*res = avg(out, id->taille);
 	}
 	else if(comparerChaines(id->mode, "sum")){
-		fprintf(stderr, "mode sum\n");
 		*res = sum(out, id->taille);
 	}
 	else if(comparerChaines(id->mode, "odd")){
-		fprintf(stderr, "mode odd\n");
 		*res = odd(out, id->taille);
 	}
 	else{
-			fprintf(stderr, "Erreur dans le mode entrée\n");
-			exit(EXIT_FAILURE);
+		fprintf(stderr, "Erreur dans le mode entrée\n");
+		exit(EXIT_FAILURE);
 	}
-	return (void*)(res);	
+	return (void*)(res);
 }
 
 float max(float in[], int tailleTab){
+	assert(tailleTab>0);
 	float max_actuel = in[0]; int i;
 	for(i = 0; i<tailleTab; i++){
 		if(in[i] > max_actuel){
@@ -207,6 +210,7 @@ float max(float in[], int tailleTab){
 }
 
 float min(float in[], int tailleTab){
+	assert(tailleTab>0);
 	float min_actuel = in[0]; int i;
 	for(i = 0; i<tailleTab; i++){
 		if(in[i] < min_actuel){
@@ -217,6 +221,7 @@ float min(float in[], int tailleTab){
 }
 
 float avg(float in[], int tailleTab){
+	assert(tailleTab>0);
 	float sum = 0; int i;
 	for(i = 0; i<tailleTab; i++){
 		sum += in[i];
@@ -225,6 +230,7 @@ float avg(float in[], int tailleTab){
 }
 
 float sum(float in[], int tailleTab){
+	assert(tailleTab>0);
 	float sum = 0; int i;
 	for(i = 0; i<tailleTab; i++){
 		sum += in[i];
@@ -233,6 +239,7 @@ float sum(float in[], int tailleTab){
 }
 
 float odd(float in[], int tailleTab){
+	assert(tailleTab>0);
 	float nombreValeursImpair = 0; int i;
 	for(i = 0; i<tailleTab; i++){
 		if((int)in[i]%2){
@@ -242,7 +249,7 @@ float odd(float in[], int tailleTab){
 	return nombreValeursImpair;
 }
 
-int comparerChaines(const char* chaine1, const char* chaine2){   
+int comparerChaines(const char* chaine1, const char* chaine2){ 
 	int i;
     if(strlen(chaine1) != strlen(chaine2)){
         return 0;
