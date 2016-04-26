@@ -19,13 +19,13 @@ struct byThread{
 	char * mode;
 	//~ pthread_mutex_t * mutex;
 };
-
+typedef struct byThread BYTHREAD;
 //~ struct byThread * creationByThread(float * chiffre, int deb, int fin, char * mode, pthread_mutex_t * mutex){
-struct byThread * creationByThread(float * chiffre, int deb, int fin, int taille, char * mode){
+BYTHREAD* creationByThread(float * chiffre, int deb, int fin, int taille, char * mode){
 	//Initialise la structure de données byThread qui sert au processus chefs d'équipes à passer les données que doivent traiter les threads aux différents threads qu'il engendre.
 	assert(deb>=0);
 	assert(fin>=0);
-	struct byThread * thInfo = malloc(sizeof(struct byThread));
+	BYTHREAD * thInfo = malloc(sizeof(BYTHREAD));
 	thInfo->deb = deb;
 	thInfo->fin = fin;
 	thInfo->chiffre = chiffre;
@@ -34,17 +34,19 @@ struct byThread * creationByThread(float * chiffre, int deb, int fin, int taille
 	return thInfo;
 }
 
-void afficherByThread(struct byThread thInfo){
-	int i;
-	for(i = 0; i<thInfo.taille; i++){
-		printf("%f ", thInfo.chiffre[i]);
-	}
-	printf("\n");
+void afficherByThread(BYTHREAD thInfo){
+	//~ int i;
+	//~ for(i = 0; i<thInfo.taille; i++){
+		//~ printf("%f ", thInfo.chiffre[i]);
+	//~ }
+	//~ printf("\n");
 	printf("deb : %d, fin : %d, mode : %s, taille de chiffre : %d\n", thInfo.deb, thInfo.fin, thInfo.mode, thInfo.taille);
 }
 
 void chefEquipeMain(char * nomFichier, char* mode);
 void* mainThread(void* a);
+
+float max(float in[], int tailleTab);
 
 int main(int argc, char ** argv){
 	if(argc>=3){
@@ -88,7 +90,7 @@ int main(int argc, char ** argv){
 		//~ for(i = 1; i<N; i++){
 			//~ chiffre[i] = chiffre[i-1]+1.7;
 		//~ }
-		//~ struct byThread * thInfo = creationByThread(chiffre, 2, 3, mode, &mutex); //Façon d'initialiser un struct byThread. C'est la structure qu'il faudra envoyer aux threads. Elles seront initialisé par les processus chefs d'équipe.
+		//~ BYTHREAD * thInfo = creationByThread(chiffre, 2, 3, mode, &mutex); //Façon d'initialiser un struct byThread. C'est la structure qu'il faudra envoyer aux threads. Elles seront initialisé par les processus chefs d'équipe.
 		
 		//Affichage des noms de fichier en entrée (affichage test).
 		for(i = 0; i<nombreFichiers; i++){
@@ -107,7 +109,7 @@ int main(int argc, char ** argv){
 //Il faudrait créer des fonctions "main" pour les threads et les processus chefs d'équipe
 void chefEquipeMain(char * nomFichier, char* mode){
 	char buf[MAX_SIZE_BUF]; char entreeTraiter[MAX_SIZE_BUF]; int i;
-	float valeurs[100000]; int nombreValeurs = 0; int j, k;
+	float valeurs[100000]; int nombreValeurs = 0; int k;
 	int FS = open(nomFichier, O_RDONLY);
 	assert(FS!=-1);
 	if(FS == -1){
@@ -115,7 +117,7 @@ void chefEquipeMain(char * nomFichier, char* mode){
 	}
 	else{
 		do{
-			read(FS, buf, MAX_SIZE_BUF); j = 0; k = 0;
+			read(FS, buf, MAX_SIZE_BUF); k = 0;
 			for(i = 0; i<MAX_SIZE_BUF; i++){
 				if(buf[i] != '\n'){
 					entreeTraiter[k] = buf[i];
@@ -135,14 +137,17 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		}
 		
 		
-		struct byThread * thInfo = creationByThread(valeurs, 0, nombreValeurs, nombreValeurs, mode);
+		BYTHREAD *thInfo = creationByThread(valeurs, 0, 10, 10, mode);
 		printf("Affichage avant les threads :\n");
-		afficherByThread(*thInfo);
+		//~ afficherByThread(*thInfo);
 		int nombreThreadTotal = nombreValeurs / 100; int nombreThreadCreer = 0;
+		float * res;
 		pthread_t tid; 
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
-			pthread_create( &tid, NULL, &mainThread, &(thInfo));
-			pthread_join(tid, NULL);
+			pthread_create( &tid, NULL, &mainThread, thInfo);
+			printf("Threads %d créer\n", nombreThreadCreer);
+			pthread_join(tid, (void*)&res);
+			printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
 		}
 		
 		
@@ -150,16 +155,26 @@ void chefEquipeMain(char * nomFichier, char* mode){
 }
 
 void* mainThread(void* a){
-	struct byThread* id = (struct byThread*)a; int i; //Après un test d'affichage, j'ai pu remarquer que le passage en argument de thread ne marche pas sur ma structure de données.
-	assert(id->taille>0);//C'est assert se déclenche de temps en temps sans que je sache d'ou ça puisse venir.
-	assert(id->chiffre != NULL);
-	printf("Affichage dans threads : \n");
-	afficherByThread(*id);
-	//~ printf("DEBUT\n");
-	//~ for(i = id->deb; i < id->fin; i++){
-		//~ printf("%f ", id->chiffre[i]);
-	//~ }
-	//~ printf("\nFIN\n");
-	pthread_exit(EXIT_SUCCESS);
-	
+	struct byThread* id = (struct byThread*)a; int i, j = 0;
+	assert(id->taille>0);
+	float out[MAX_SIZE_BUF];
+	for(i = id->deb; i<id->fin; i++){
+		out[j] = id->chiffre[i];
+		j++;
+	}
+	printf("id->taille : %d, j : %d\n", id->taille, j);
+	assert(id->taille == j);
+	float * res = malloc(sizeof(float));
+	*res = max(out, id->taille);
+	return (void*)(res);	
+}
+
+float max(float in[], int tailleTab){
+	float max_actuel = in[0]; int i;
+	for(i = 0; i<tailleTab; i++){
+		if(in[i] > max_actuel){
+			max_actuel = in[i];
+		}
+	}
+	return max_actuel;
 }
