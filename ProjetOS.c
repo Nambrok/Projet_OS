@@ -70,12 +70,16 @@ int main(int argc, char ** argv){
 				
 		pid_t pid; char fichier[MAX_SIZE_BUF];
 		strcpy(fichier, "fichier2.txt");
+		int status = 0;
 		for(i = 0; i<nombreFichiers; i++){
 			pid = fork();
 			//TODO: Il faudrait choisir ici quels fichiers sera passer au processus fils(ou processus chefs d'équipes.
 			if(pid){
 				//pere
-				wait(NULL);
+				wait(&status);
+				if(WIFEXITED(status)){
+					printf("%s : %f\n", mode, WEXITSTATUS(status));
+				}	
 			}
 			else{
 				//fils
@@ -145,6 +149,7 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		int nombreThreadTotal = (nombreValeurs / 100)+1; int nombreThreadCreer = 0;
 		float * res;
 		pthread_t tid;
+		float tabRes[MAX_SIZE_BUF] = {0.0};
 		
 		
 		BYTHREAD * thInfo[MAX_SIZE_BUF]; int deb = 1, fin = 101; int taille = 100;//J'initialise la structure de données à envoyées pour chaque thread.
@@ -156,11 +161,35 @@ void chefEquipeMain(char * nomFichier, char* mode){
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
 			pthread_create( &tid, NULL, &mainThread, thInfo[nombreThreadCreer]);
 			pthread_join(tid, (void*)&res);
+			tabRes[nombreThreadCreer] = *res;
 			printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
 		}
+		
+		float miseEnCommunRes;
+		if(comparerChaines(mode, "max")){
+			miseEnCommunRes = max(tabRes, nombreThreadTotal);
+		}
+		else if(comparerChaines(mode, "min")){
+			miseEnCommunRes = min(tabRes, nombreThreadTotal);
+		}
+		else if(comparerChaines(mode, "avg")){
+			miseEnCommunRes = avg(tabRes, nombreThreadTotal);
+		}
+		else if(comparerChaines(mode, "sum")){
+			miseEnCommunRes = sum(tabRes, nombreThreadTotal);
+		}
+		else if(comparerChaines(mode, "odd")){
+			miseEnCommunRes = odd(tabRes, nombreThreadTotal);
+		}
+		else{
+			fprintf(stderr, "Erreur dans le mode entrée\n");
+			exit(EXIT_FAILURE);
+		}
+		
 		for(i =0; i<nombreThreadTotal; i++){
 			free(thInfo[i]);
 		}
+		exit(miseEnCommunRes);
 	}
 }
 
