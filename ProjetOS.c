@@ -119,8 +119,7 @@ int main(int argc, char ** argv){
 			exit(EXIT_FAILURE);
 		}
 		printf("Le %s dans les fichiers données en entrées est %f.\n", mode, miseEnCommunRes);
-				
-		//Affichage des noms de fichier en entrée (affichage test).
+		
 		fprintf(stdout, "Fichiers d'entrées : ");
 		for(i = 0; i<nombreFichiers; i++){
 			fprintf(stdout, "%s ", nomFichiers[i]);
@@ -174,14 +173,18 @@ float chefEquipeMain(char * nomFichier, char* mode){
 		BYTHREAD * thInfo[MAX_SIZE_BUF]; int deb = 1, fin = 101; int taille = 100;//J'initialise la structure de données à envoyées pour chaque thread.
 		for(i = 0; i<nombreThreadTotal; i++){
 			thInfo[i] = creationByThread(valeurs, deb, fin, taille, mode);
+			
 			deb+= 100; fin+= 100;
+			if(fin > nombreValeurs){
+				fin =  nombreValeurs;
+			}
 		}
 		
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
 			pthread_create( &tid, NULL, &mainThread, thInfo[nombreThreadCreer]);
 			pthread_join(tid, (void*)&res);
 			tabRes[nombreThreadCreer] = *res;
-			printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
+			//~ printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
 		}
 		
 		float miseEnCommunRes;
