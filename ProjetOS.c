@@ -51,6 +51,7 @@ float min(float in[], int tailleTab);
 float avg(float in[], int tailleTab);
 float sum(float in[], int tailleTab);
 float odd(float in[], int tailleTab);
+int oddMiseEnCommun(float in[], int tailleTab);
 int comparerChaines(const char* chaine1, const char* chaine2);
 
 int main(int argc, char ** argv){
@@ -177,7 +178,7 @@ float chefEquipeMain(char * nomFichier, char* mode){
 			miseEnCommunRes = sum(tabRes, nombreThreadTotal);
 		}
 		else if(comparerChaines(mode, "odd")){
-			miseEnCommunRes = odd(tabRes, nombreThreadTotal);
+			miseEnCommunRes = oddMiseEnCommun(tabRes, nombreThreadTotal);
 		}
 		else{
 			fprintf(stderr, "Erreur dans le mode entrée\n");
@@ -273,6 +274,15 @@ float odd(float in[], int tailleTab){
 		if((int)in[i]%2){
 			nombreValeursImpair += 1;
 		}
+	}
+	return nombreValeursImpair;
+}
+
+int oddMiseEnCommun(float in[], int tailleTab){
+	assert(tailleTab>0);
+	int nombreValeursImpair = 0; int i;
+	for(i = 0; i<tailleTab; i++){
+		nombreValeursImpair += in[i];
 	}
 	return nombreValeursImpair;
 }
