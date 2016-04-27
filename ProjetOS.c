@@ -141,6 +141,7 @@ float chefEquipeMain(char * nomFichier, char* mode){
 				}
 			}//On extraie une partie des valeurs du ficher nomFichier dans le tableau valeurs. valeurs[0] est le nombre de valeurs dans le fichier.
 		}while(nombreValeurs<valeurs[0]);
+				
 		close(FS);
 		
 		int nombreThreadTotal = (nombreValeurs / 100)+1; int nombreThreadCreer = 0;
