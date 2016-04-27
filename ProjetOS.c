@@ -10,6 +10,7 @@
 #include <fcntl.h>
 
 #define MAX_SIZE_BUF 256
+#define MAX_SIZE_VAL 100000
 
 struct byThread{
 	float * chiffre;
@@ -53,6 +54,8 @@ float sum(float in[], int tailleTab);
 float odd(float in[], int tailleTab);
 int oddMiseEnCommun(float in[], int tailleTab);
 int comparerChaines(const char* chaine1, const char* chaine2);
+float identifierMode(char * mode, float * tabRes, int tailleTab);
+float identifierModeMEC(char * mode, float * tabRes, int tailleTab);
 
 int main(int argc, char ** argv){
 	if(argc>=3){
@@ -99,26 +102,7 @@ int main(int argc, char ** argv){
 			}
 		}
 
-		float miseEnCommunRes;
-		if(comparerChaines(mode, "max")){
-			miseEnCommunRes = max(res, j);
-		}
-		else if(comparerChaines(mode, "min")){
-			miseEnCommunRes = min(res, j);
-		}
-		else if(comparerChaines(mode, "avg")){
-			miseEnCommunRes = avg(res, j);
-		}
-		else if(comparerChaines(mode, "sum")){
-			miseEnCommunRes = sum(res, j);
-		}
-		else if(comparerChaines(mode, "odd")){
-			miseEnCommunRes = oddMiseEnCommun(res, j);
-		}
-		else{
-			fprintf(stderr, "Erreur dans le mode entrée\n");
-			exit(EXIT_FAILURE);
-		}
+		float miseEnCommunRes = identifierModeMEC(mode, res, j);
 		printf("Le %s dans les fichiers données en entrées est %f.\n", mode, miseEnCommunRes);
 		
 		fprintf(stdout, "Fichiers d'entrées : ");
@@ -137,7 +121,7 @@ int main(int argc, char ** argv){
 
 float chefEquipeMain(char * nomFichier, char* mode){
 	char buf[MAX_SIZE_BUF]; char entreeTraiter[MAX_SIZE_BUF]; int i;
-	float valeurs[100000]; int nombreValeurs = 0; int k;
+	float valeurs[MAX_SIZE_VAL]; int nombreValeurs = 0; int k;
 	int FS = open(nomFichier, O_RDONLY);
 	if(FS == -1){
 		fprintf(stderr, "Erreur dans l'ouverture du fichier %s\n", nomFichier);
@@ -186,33 +170,63 @@ float chefEquipeMain(char * nomFichier, char* mode){
 			//~ printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
 		}
 		
-		float miseEnCommunRes;
-		if(comparerChaines(mode, "max")){
-			miseEnCommunRes = max(tabRes, nombreThreadTotal);
-		}
-		else if(comparerChaines(mode, "min")){
-			miseEnCommunRes = min(tabRes, nombreThreadTotal);
-		}
-		else if(comparerChaines(mode, "avg")){
-			miseEnCommunRes = avg(tabRes, nombreThreadTotal);
-		}
-		else if(comparerChaines(mode, "sum")){
-			miseEnCommunRes = sum(tabRes, nombreThreadTotal);
-		}
-		else if(comparerChaines(mode, "odd")){
-			miseEnCommunRes = oddMiseEnCommun(tabRes, nombreThreadTotal);
-		}
-		else{
-			fprintf(stderr, "Erreur dans le mode entrée\n");
-			exit(EXIT_FAILURE);
-		}
+		float miseEnCommunRes = identifierModeMEC(mode, tabRes, nombreThreadTotal);
 		
-		for(i =0; i<nombreThreadTotal; i++){
+		
+		for(i = 0; i<nombreThreadTotal; i++){
 			free(thInfo[i]);
 		}
 		return miseEnCommunRes;
 	}
 	return -1;
+}
+
+float identifierModeMEC(char * mode, float * tabRes, int tailleTab){
+	float miseEnCommunRes;
+	if(comparerChaines(mode, "max")){
+			miseEnCommunRes = max(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "min")){
+			miseEnCommunRes = min(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "avg")){
+			miseEnCommunRes = avg(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "sum")){
+			miseEnCommunRes = sum(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "odd")){
+			miseEnCommunRes = oddMiseEnCommun(tabRes, tailleTab);
+		}
+		else{
+			fprintf(stderr, "Erreur dans le mode entrée\n");
+			exit(EXIT_FAILURE);
+		}
+		return miseEnCommunRes;
+}
+
+float identifierMode(char * mode, float * tabRes, int tailleTab){
+	float miseEnCommunRes;
+	if(comparerChaines(mode, "max")){
+			miseEnCommunRes = max(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "min")){
+			miseEnCommunRes = min(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "avg")){
+			miseEnCommunRes = avg(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "sum")){
+			miseEnCommunRes = sum(tabRes, tailleTab);
+		}
+		else if(comparerChaines(mode, "odd")){
+			miseEnCommunRes = odd(tabRes, tailleTab);
+		}
+		else{
+			fprintf(stderr, "Erreur dans le mode entrée\n");
+			exit(EXIT_FAILURE);
+		}
+		return miseEnCommunRes;
 }
 
 void* mainThread(void* a){
@@ -223,29 +237,9 @@ void* mainThread(void* a){
 		out[j] = id->chiffre[i];
 		j++;
 	}
-	//~ for(i = 0; i<id->taille; i++){
-		//~ printf("%f\n", out[i]);
-	//~ }
+
 	float * res = malloc(sizeof(float));
-	if(comparerChaines(id->mode, "max")){
-		*res = max(out, id->taille);
-	}
-	else if(comparerChaines(id->mode, "min")){
-		*res = min(out, id->taille);
-	}
-	else if(comparerChaines(id->mode, "avg")){
-		*res = avg(out, id->taille);
-	}
-	else if(comparerChaines(id->mode, "sum")){
-		*res = sum(out, id->taille);
-	}
-	else if(comparerChaines(id->mode, "odd")){
-		*res = odd(out, id->taille);
-	}
-	else{
-		fprintf(stderr, "Erreur dans le mode entrée\n");
-		exit(EXIT_FAILURE);
-	}
+	*res = identifierMode(id->mode, out, id->taille);
 	return (void*)(res);
 }
 
