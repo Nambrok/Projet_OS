@@ -168,20 +168,24 @@ float chefEquipeMain(char * nomFichier, char* mode){
 		float * res;
 		pthread_t tid;
 		float tabRes[MAX_SIZE_BUF] = {0.0};
-		
-		
 		BYTHREAD * thInfo[MAX_SIZE_BUF]; int deb = 1, fin = 101; int taille = 100;//J'initialise la structure de données à envoyées pour chaque thread.
-		for(i = 0; i<nombreThreadTotal; i++){
-			thInfo[i] = creationByThread(valeurs, deb, fin, taille, mode);
-			
-			deb+= 100; fin+= 100;
-			if(fin > nombreValeurs){
-				fin =  nombreValeurs;
+		
+		if(nombreValeurs < 100){
+			thInfo[0] = creationByThread(valeurs, deb, nombreValeurs, nombreValeurs-1, mode);
+		}
+		else{
+			for(i = 0; i<nombreThreadTotal; i++){
+				thInfo[i] = creationByThread(valeurs, deb, fin, taille, mode);
+				
+				deb+= 100; fin+= 100;
+				if(fin > nombreValeurs){
+					fin =  nombreValeurs;
+				}
 			}
 		}
 		
 		for(nombreThreadCreer = 0; nombreThreadCreer<nombreThreadTotal; nombreThreadCreer++){
-			pthread_create( &tid, NULL, &mainThread, thInfo[nombreThreadCreer]);
+			pthread_create(&tid, NULL, &mainThread, thInfo[nombreThreadCreer]);
 			pthread_join(tid, (void*)&res);
 			tabRes[nombreThreadCreer] = *res;
 			//~ printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
