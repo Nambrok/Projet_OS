@@ -65,11 +65,11 @@ int main(int argc, char ** argv){
 		char mode[MAX_SIZE_BUF];//mode est le mode, c'à-d "max", "min", "avg" etc...
 		pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 		
-		i = 0, j= 2;
-		while(i<MAX_SIZE_BUF && j<argc){
-			strcpy(nomFichiers[i], argv[j]);
+		i = 0;
+		while(i<MAX_SIZE_BUF && i+2<argc){
+			strcpy(nomFichiers[i], argv[i+2]);
 			nombreFichiers++;
-			i++; j++;
+			i++;
 		}
 		strcpy(mode, argv[1]); //On récupère le mode d'utilisation entrée dans mode pour utiliser plus tard.
 				
@@ -141,7 +141,7 @@ float chefEquipeMain(char * nomFichier, char* mode){
 					k = 0; nombreValeurs++;
 				}
 			}//On extraie une partie des valeurs du ficher nomFichier dans le tableau valeurs. valeurs[0] est le nombre de valeurs dans le fichier.
-		}while(nombreValeurs<valeurs[0]);
+		}while(nombreValeurs<=valeurs[0]);
 				
 		close(FS);
 		
