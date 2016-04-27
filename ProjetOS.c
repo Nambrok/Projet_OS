@@ -56,7 +56,6 @@ int comparerChaines(const char* chaine1, const char* chaine2);
 
 int main(int argc, char ** argv){
 	if(argc>=3){
-		//~ fprintf(stdout, "こんにちは世界!\n");
 		char nomFichiers[MAX_SIZE_BUF][MAX_SIZE_BUF]; int i, j, nombreFichiers = 0;//nomFichiers contient les noms des fichiers d'entrée qu'il faudra faire passer aux processus chefs d'équipe.
 		//nombreFichiers est la taille max de la première dimension de nomFichiers, c'à-d le nombre de nom de fichier et le nombre de fichier qu'on a.
 		char mode[MAX_SIZE_BUF];//mode est le mode, c'à-d "max", "min", "avg" etc...
@@ -80,10 +79,12 @@ int main(int argc, char ** argv){
 				//pere
 				close(fd[1]);
 				waitpid(pid, NULL, 0);
+				
 				pthread_mutex_lock(&mutex);
+				
 				read(fd[0], buffer, MAX_SIZE_BUF);
-				res[j] = atof(buffer);
-				j++;
+				res[j] = atof(buffer); j++;
+				
 				pthread_mutex_unlock(&mutex);
 				close(fd[0]);
 			}
@@ -91,7 +92,7 @@ int main(int argc, char ** argv){
 				//fils
 				close(fd[0]);
 				char str[MAX_SIZE_BUF];
-				sprintf(str, "%f", chefEquipeMain(fichier, mode));
+				sprintf(str, "%f", chefEquipeMain(fichier, mode)); //Permet de traduire le float en chaine de caractères pour l'envoyer à travers le pipe.
 				write(fd[1], str, MAX_SIZE_BUF);
 				close(fd[1]);
 				exit(EXIT_SUCCESS);
@@ -134,14 +135,13 @@ int main(int argc, char ** argv){
 	return 0;
 }
 
-//Il faudrait créer des fonctions "main" pour les threads et les processus chefs d'équipe
 float chefEquipeMain(char * nomFichier, char* mode){
 	char buf[MAX_SIZE_BUF]; char entreeTraiter[MAX_SIZE_BUF]; int i;
 	float valeurs[100000]; int nombreValeurs = 0; int k;
 	int FS = open(nomFichier, O_RDONLY);
-	assert(FS!=-1);
 	if(FS == -1){
 		fprintf(stderr, "Erreur dans l'ouverture du fichier %s\n", nomFichier);
+		exit(EXIT_FAILURE);
 	}
 	else{
 		do{
@@ -157,12 +157,7 @@ float chefEquipeMain(char * nomFichier, char* mode){
 				}
 			}//On extraie une partie des valeurs du ficher nomFichier dans le tableau valeurs. valeurs[0] est le nombre de valeurs dans le fichier.
 		}while(nombreValeurs<valeurs[0]);
-		
 		close(FS);
-		//~ fprintf(stdout, "nombreValeurs : %d\n", nombreValeurs);
-		//~ for(i = 1; i<nombreValeurs; i++){
-			//~ fprintf(stdout, "%d : %f\n", i-1, valeurs[i]);
-		//~ }
 		
 		int nombreThreadTotal = (nombreValeurs / 100)+1; int nombreThreadCreer = 0;
 		float * res;
