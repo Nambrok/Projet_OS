@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+#define NDEBUG
 #define MAX_SIZE_BUF 256
 #define MAX_SIZE_VAL 100000
 
@@ -168,6 +169,7 @@ float chefEquipeMain(char * nomFichier, char* mode){
 			pthread_create(&tid, NULL, &mainThread, thInfo[nombreThreadCreer]);
 			pthread_join(tid, (void*)&res);
 			tabRes[nombreThreadCreer] = *res;
+			free(res);
 			//~ printf("Threads %d fermées, résultat est %f\n", nombreThreadCreer, *res);
 		}
 		
