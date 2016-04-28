@@ -71,6 +71,10 @@ int main(int argc, char ** argv){
 			nombreFichiers++;
 			i++;
 		}
+		if(i>= MAX_SIZE_BUF){
+			fprintf(stderr, "Le nombre de fichier données en entrées est plus grand que MAX_SIZE_BUF (%d).\n", MAX_SIZE_BUF);
+			exit(EXIT_FAILURE);
+		}
 		strcpy(mode, argv[1]); //On récupère le mode d'utilisation entrée dans mode pour utiliser plus tard.
 				
 		pid_t pid; char fichier[MAX_SIZE_BUF]; int fd[2];
